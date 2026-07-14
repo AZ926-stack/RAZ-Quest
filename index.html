@@ -3492,7 +3492,10 @@ function updateBottomNav(idx) {
 // MAP RENDERING
 // ============================================================
 function getLevelStars(level) {
-  return save.levelStars[level] || [];
+  const v = save.levelStars[level];
+  if (Array.isArray(v)) return v;
+  // If it's an object (e.g. from vocab challenge), return empty array
+  return [];
 }
 
 function getCompletedCount(level) {
@@ -4603,8 +4606,8 @@ function checkLevelUnlocks() {
   ALL_LEVELS.forEach(l => {
     const books = BOOKS[l];
     if (!books || books.length === 0) return;
-    const stars = save.levelStars[l] || [];
-    if (stars.filter(s => s === 3).length === books.length && books.length > 0) {
+    const starsArr = Array.isArray(save.levelStars[l]) ? save.levelStars[l] : [];
+    if (starsArr.filter(s => s === 3).length === books.length && books.length > 0) {
       save.hasPerfectLevel = true;
     }
   });
@@ -4945,10 +4948,10 @@ function finishVocabGame() {
   const level = save.currentLevel;
   const bookIdx = save.currentBook;
   const book = BOOKS[level][bookIdx];
-  const starKey = book.id + ':vocab';
-  if (!save.levelStars[level]) save.levelStars[level] = {};
-  const prev = save.levelStars[level][starKey] || 0;
-  if (stars > prev) save.levelStars[level][starKey] = stars;
+  if (!save.vocabStars) save.vocabStars = {};
+  if (!save.vocabStars[level]) save.vocabStars[level] = {};
+  const prev = save.vocabStars[level][bookIdx] || 0;
+  if (stars > prev) save.vocabStars[level][bookIdx] = stars;
   save.xp = (save.xp || 0) + xp;
   addLog('vocab', `${book.titleEn} 词汇闯关: ${correct}/${total} (${pct}%)`);
   persistSave();
