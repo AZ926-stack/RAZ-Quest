@@ -4646,22 +4646,23 @@ function renderResults(stars, correct, total, xpBase, xpBonus, xpEarned) {
 }
 
 function goToLevelDetail() {
-  goBack(); // back from results -> quiz -> reading -> level detail
-  goBack();
-  goBack();
+  stopReadAloud();
   const level = save.currentLevel;
+  save.screenHistory = ['mapScreen'];
   pushHistory('mapScreen');
   showScreen('levelDetail');
   renderLevelDetail(level);
 }
 
 function nextLevel() {
+  stopReadAloud();
   const level = save.currentLevel;
   const books = BOOKS[level] || [];
   const nextBookIdx = (save.currentBook || 0) + 1;
 
   if (nextBookIdx < books.length) {
-    // Go to next book in same level
+    // Reset history stack before opening next book
+    save.screenHistory = ['mapScreen', 'levelDetail'];
     openBook(level, nextBookIdx);
   } else {
     // Find next unlocked level
