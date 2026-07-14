@@ -141,9 +141,11 @@ color:var(--accent-primary);margin-bottom:.6rem;padding-left:.3rem}
 .vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-bottom:1.2rem}
 .vocab-card{background:var(--bg-surface);border-radius:8px;padding:.6rem .8rem;cursor:pointer;
 transition:all .3s;border-left:3px solid var(--accent-purple)}
-.vocab-card .en{font-weight:600;font-size:.9rem;color:var(--text-primary)}
+.vocab-card .en{font-weight:600;font-size:.9rem;color:var(--text-primary);display:flex;align-items:center;gap:.4rem}
 .vocab-card .zh{font-size:.75rem;color:var(--text-secondary);margin-top:.15rem;display:none}
 .vocab-card.expanded .zh{display:block}
+.speak-btn{background:none;border:none;font-size:1rem;cursor:pointer;opacity:.5;transition:opacity .2s;padding:0;line-height:1}
+.speak-btn:hover,.speak-btn:active{opacity:1}
 .quiz-start-bar{position:fixed;bottom:0;left:0;right:0;padding:1rem;
 background:rgba(10,14,23,.95);backdrop-filter:blur(10px);z-index:10}
 
@@ -4218,10 +4220,19 @@ function openBook(level, bookIndex) {
   book.vocab.forEach(v => {
     const card = document.createElement('div');
     card.className = 'vocab-card';
-    card.innerHTML = `<div class="en">${v.en}</div><div class="zh">${v.zh}</div>`;
+    card.innerHTML = `<div class="en">${v.en}<span class="speak-btn" onclick="event.stopPropagation();speakWord('${v.en.replace(/'/g,"\\'")}')">&#x1f50a;</span></div><div class="zh">${v.zh}</div>`;
     card.onclick = () => card.classList.toggle('expanded');
     vocabGrid.appendChild(card);
   });
+}
+
+function speakWord(word) {
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang = 'en-US';
+  u.rate = 0.85;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
 // ============================================================
