@@ -243,6 +243,50 @@ border-bottom:1px solid rgba(255,255,255,.05)}
 .setting-item .value{font-size:.85rem;color:var(--text-secondary)}
 .btn-danger{background:var(--accent-red);color:#fff;border:none;padding:.6rem 1.2rem;
 border-radius:8px;cursor:pointer;font-size:.9rem;margin-top:.5rem}
+
+/* ===== READ ALOUD ===== */
+#readAloudScreen{background:var(--bg-primary);flex-direction:column}
+.readaloud-body{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem}
+.ra-sentence{padding:1rem 1.5rem;font-size:1.4rem;border-radius:12px;
+background:var(--bg-surface);transition:all .3s;cursor:pointer;line-height:1.6}
+.ra-sentence:hover{background:rgba(255,255,255,.08)}
+.ra-active{background:#fff3cd !important;color:#000;font-weight:700;transform:scale(1.03);
+box-shadow:0 2px 12px rgba(245,158,11,.3)}
+.ra-done{opacity:.4}
+.readaloud-controls{display:flex;gap:.5rem;padding:1rem;justify-content:center;align-items:center;
+border-top:1px solid rgba(255,255,255,.08);background:var(--bg-surface)}
+
+/* ===== VOCAB CHALLENGE ===== */
+#vocabScreen{background:var(--bg-primary);flex-direction:column}
+.vocab-game-progress{padding:.6rem 1rem;display:flex;gap:.3rem;align-items:center;
+justify-content:center;font-size:.85rem;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,.08)}
+.vocab-game-body{flex:1;overflow-y:auto;padding:1.5rem 1rem;display:flex;flex-direction:column;
+align-items:center;justify-content:center;gap:1rem}
+.vocab-round-label{font-size:.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em}
+.vocab-prompt{font-size:1.3rem;font-weight:700;text-align:center;margin-bottom:.5rem;line-height:1.5}
+.vocab-options{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;width:100%;max-width:400px}
+.vocab-option{padding:1rem;border-radius:12px;background:var(--bg-surface);border:2px solid transparent;
+cursor:pointer;font-size:1rem;text-align:center;transition:all .2s}
+.vocab-option:active{transform:scale(.96)}
+.vocab-option.correct{background:#d1fae5;border-color:#10b981;color:#065f46}
+.vocab-option.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.vocab-option.disabled{pointer-events:none;opacity:.6}
+.vocab-spell-word{font-size:2.5rem;font-weight:700;letter-spacing:.3em;text-align:center;
+font-family:var(--font-mono);margin:1rem 0}
+.vocab-spell-word .blank{border-bottom:3px solid var(--accent-primary);margin:0 .05em}
+.vocab-spell-word .filled{color:var(--accent-primary)}
+.vocab-letter-grid{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;max-width:360px}
+.vocab-letter-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--accent-primary);
+background:var(--bg-surface);color:var(--text-primary);font-size:1.1rem;font-weight:600;
+cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.vocab-letter-btn:active{transform:scale(.9)}
+.vocab-letter-btn.used{opacity:.3;pointer-events:none}
+.vocab-game-controls{display:flex;gap:.5rem;padding:1rem;justify-content:center;
+border-top:1px solid rgba(255,255,255,.08);background:var(--bg-surface)}
+.vocab-result{display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center}
+.vocab-result .big-score{font-size:3rem;font-weight:800;font-family:var(--font-mono);
+color:var(--accent-gold)}
+.vocab-result .result-stars{font-size:2rem;margin:.5rem 0}
 </style>
 </head>
 <body>
@@ -292,7 +336,11 @@ border-radius:8px;cursor:pointer;font-size:.9rem;margin-top:.5rem}
   </div>
   <div class="reading-content" id="readingContent"></div>
   <div class="quiz-start-bar">
-    <button class="btn-primary" style="width:100%" onclick="startQuiz()">开始答题</button>
+    <div style="display:flex;gap:.5rem;width:100%">
+      <button class="btn-primary" style="flex:1;font-size:.85rem;padding:.7rem .5rem" onclick="startReadAloud()">&#127908; 朗读</button>
+      <button class="btn-primary" style="flex:1;font-size:.85rem;padding:.7rem .5rem;background:linear-gradient(135deg,var(--accent-green),#059669)" onclick="startVocabGame()">&#127919; 词汇闯关</button>
+      <button class="btn-primary" style="flex:1;font-size:.85rem;padding:.7rem .5rem" onclick="startQuiz()">&#9998; 答题</button>
+    </div>
   </div>
 </div>
 
@@ -364,6 +412,32 @@ border-radius:8px;cursor:pointer;font-size:.9rem;margin-top:.5rem}
     <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
     <button class="btn-danger" onclick="resetGame()">重置游戏进度</button>
   </div>
+</div>
+
+<!-- ===== READ ALOUD ===== -->
+<div id="readAloudScreen" class="screen">
+  <div class="level-header">
+    <button class="back-btn" onclick="stopReadAloud();goBack()">&larr;</button>
+    <div class="level-title" id="readAloudTitle"></div>
+  </div>
+  <div class="readaloud-body" id="readAloudBody"></div>
+  <div class="readaloud-controls">
+    <button class="btn-secondary" id="readAloudPlayBtn" onclick="toggleReadAloud()">&#9654; 播放</button>
+    <button class="btn-secondary" id="readAloudSlowerBtn" onclick="readAloudSlower()">&#128034; 慢速</button>
+    <span id="readAloudRateDisplay" style="display:flex;align-items:center;font-size:.9rem;color:var(--text-secondary)">1.0x</span>
+    <button class="btn-secondary" id="readAloudFasterBtn" onclick="readAloudFaster()">&#128007; 快速</button>
+  </div>
+</div>
+
+<!-- ===== VOCAB CHALLENGE ===== -->
+<div id="vocabScreen" class="screen">
+  <div class="level-header">
+    <button class="back-btn" onclick="goBack()">&larr;</button>
+    <div class="level-title" id="vocabTitle"></div>
+  </div>
+  <div class="vocab-game-progress" id="vocabGameProgress"></div>
+  <div class="vocab-game-body" id="vocabGameBody"></div>
+  <div class="vocab-game-controls" id="vocabGameControls"></div>
 </div>
 
 <script>
@@ -4236,6 +4310,123 @@ function speakWord(word) {
 }
 
 // ============================================================
+// READ ALOUD
+// ============================================================
+let raState = { sentences: [], current: -1, playing: false, rate: 1.0, autoPlay: true };
+
+function startReadAloud() {
+  const book = BOOKS[save.currentLevel][save.currentBook];
+  if (!book || !book.passage) return;
+  const sentences = book.passage.split('\n').filter(s => s.trim());
+  raState = { sentences, current: -1, playing: false, rate: 1.0, autoPlay: true };
+  pushHistory('readingScreen');
+  showScreen('readAloudScreen');
+  document.getElementById('readAloudTitle').textContent = book.titleEn + ' - ' + book.titleCn;
+  renderReadAloud();
+  updateRaRateDisplay();
+  // auto-start after a short delay
+  setTimeout(() => toggleReadAloud(), 400);
+}
+
+function renderReadAloud() {
+  const body = document.getElementById('readAloudBody');
+  body.innerHTML = raState.sentences.map((s, i) =>
+    `<div class="ra-sentence" id="ra-sent-${i}" onclick="readAloudJumpTo(${i})">${s}</div>`
+  ).join('');
+  body.scrollTop = 0;
+}
+
+function toggleReadAloud() {
+  if (!window.speechSynthesis) return;
+  if (raState.playing) {
+    speechSynthesis.pause();
+    raState.playing = false;
+    updateRaPlayBtn();
+  } else {
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+    } else {
+      readAloudStartFrom(raState.current + 1);
+    }
+    raState.playing = true;
+    updateRaPlayBtn();
+  }
+}
+
+function readAloudStartFrom(idx) {
+  if (idx >= raState.sentences.length) {
+    raState.playing = false;
+    updateRaPlayBtn();
+    return;
+  }
+  raState.current = idx;
+  highlightRaSentence(idx);
+  const u = new SpeechSynthesisUtterance(raState.sentences[idx]);
+  u.lang = 'en-US';
+  u.rate = raState.rate;
+  u.onend = () => {
+    markRaSentenceDone(idx);
+    if (raState.playing && raState.current === idx) {
+      readAloudStartFrom(idx + 1);
+    }
+  };
+  u.onerror = () => {
+    if (raState.playing) readAloudStartFrom(idx + 1);
+  };
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+function readAloudJumpTo(idx) {
+  if (idx < 0 || idx >= raState.sentences.length) return;
+  speechSynthesis.cancel();
+  raState.playing = true;
+  updateRaPlayBtn();
+  readAloudStartFrom(idx);
+}
+
+function highlightRaSentence(idx) {
+  document.querySelectorAll('.ra-sentence').forEach((el, i) => {
+    el.classList.remove('ra-active', 'ra-done');
+    if (i < idx) el.classList.add('ra-done');
+    if (i === idx) el.classList.add('ra-active');
+  });
+  // scroll active sentence into view
+  const el = document.getElementById('ra-sent-' + idx);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function markRaSentenceDone(idx) {
+  const el = document.getElementById('ra-sent-' + idx);
+  if (el) { el.classList.remove('ra-active'); el.classList.add('ra-done'); }
+}
+
+function stopReadAloud() {
+  speechSynthesis.cancel();
+  raState.playing = false;
+}
+
+function updateRaPlayBtn() {
+  const btn = document.getElementById('readAloudPlayBtn');
+  if (btn) btn.innerHTML = raState.playing ? '&#9646;&#9646; 暂停' : '&#9654; 播放';
+}
+
+function readAloudSlower() {
+  raState.rate = Math.max(0.5, Math.round((raState.rate - 0.1) * 10) / 10);
+  updateRaRateDisplay();
+}
+
+function readAloudFaster() {
+  raState.rate = Math.min(2.0, Math.round((raState.rate + 0.1) * 10) / 10);
+  updateRaRateDisplay();
+}
+
+function updateRaRateDisplay() {
+  const el = document.getElementById('readAloudRateDisplay');
+  if (el) el.textContent = raState.rate.toFixed(1) + 'x';
+}
+
+// ============================================================
 // QUIZ
 // ============================================================
 let quizState = { qIndex: 0, answers: [], startTime: 0, timer: null, answered: false };
@@ -4490,6 +4681,292 @@ function nextLevel() {
     showScreen('mapScreen');
     renderMap();
   }
+}
+
+// ============================================================
+// VOCAB CHALLENGE
+// ============================================================
+let vgState = { round: 0, qIndex: 0, vocab: [], answers: [], roundCorrect: 0, roundTotal: 0,
+  totalCorrect: 0, totalQuestions: 0, startTime: 0, spellBuffer: [], usedIndices: [] };
+
+function startVocabGame() {
+  const book = BOOKS[save.currentLevel][save.currentBook];
+  if (!book || !book.vocab || book.vocab.length < 2) return;
+  const vocab = [...book.vocab];
+  vgState = { round: 0, qIndex: 0, vocab, answers: [], roundCorrect: 0, roundTotal: 0,
+    totalCorrect: 0, totalQuestions: vocab.length * 3, startTime: Date.now(),
+    spellBuffer: [], usedIndices: [] };
+  pushHistory('readingScreen');
+  showScreen('vocabScreen');
+  document.getElementById('vocabTitle').textContent = book.titleEn + ' - ' + book.titleCn;
+  renderVocabProgress();
+  renderVocabRound();
+}
+
+function renderVocabProgress() {
+  const labels = ['听词选义', '看义选词', '拼写填空'];
+  const el = document.getElementById('vocabGameProgress');
+  el.innerHTML = labels.map((l, i) =>
+    `<span style="padding:.2rem .6rem;border-radius:20px;font-size:.8rem;${i === vgState.round
+      ? 'background:var(--accent-primary);color:#fff;font-weight:600'
+      : i < vgState.round
+        ? 'background:var(--accent-green);color:#fff'
+        : 'background:var(--bg-surface);color:var(--text-dim)'}">${i < vgState.round ? '&#10003; ' : ''}${l}</span>`
+  ).join('<span style="color:var(--text-dim)"> → </span>');
+}
+
+function renderVocabRound() {
+  renderVocabProgress();
+  if (vgState.round === 0) renderListenChoose();
+  else if (vgState.round === 1) renderSeeChoose();
+  else if (vgState.round === 2) renderSpellRound();
+}
+
+// --- Round 1: Listen & Choose Chinese ---
+function renderListenChoose() {
+  const v = vgState.vocab[vgState.qIndex];
+  const opts = vgState.round === 0 ? generateOptions(vgState.vocab, v.zh, 'zh') : generateOptions(vgState.vocab, v.en, 'en');
+  const body = document.getElementById('vocabGameBody');
+  const ctrl = document.getElementById('vocabGameControls');
+  body.innerHTML = `
+    <div class="vocab-round-label">Round 1 · 听词选义</div>
+    <button class="btn-primary" style="font-size:1.5rem;padding:1rem 2rem;border-radius:50%"
+      onclick="speakWord('${v.en.replace(/'/g,"\\'")}')">&#128264; 听一听</button>
+    <div class="vocab-prompt" style="font-size:1rem;color:var(--text-secondary)">${v.en}</div>
+    <div class="vocab-options" id="vocabOptions"></div>
+  `;
+  ctrl.innerHTML = '';
+  const grid = document.getElementById('vocabOptions');
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'vocab-option';
+    btn.textContent = opt.text;
+    btn.onclick = () => selectVocabOption(btn, opt.correct, i);
+    grid.appendChild(btn);
+  });
+  // auto-play the word
+  setTimeout(() => speakWord(v.en.replace(/'/g,"\\'")), 300);
+}
+
+// --- Round 2: See Chinese, Choose English ---
+function renderSeeChoose() {
+  const v = vgState.vocab[vgState.qIndex];
+  const opts = generateOptions(vgState.vocab, v.en, 'en');
+  const body = document.getElementById('vocabGameBody');
+  const ctrl = document.getElementById('vocabGameControls');
+  body.innerHTML = `
+    <div class="vocab-round-label">Round 2 · 看义选词</div>
+    <div class="vocab-prompt" style="font-size:2rem">${v.zh}</div>
+    <div class="vocab-options" id="vocabOptions"></div>
+  `;
+  ctrl.innerHTML = '';
+  const grid = document.getElementById('vocabOptions');
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'vocab-option';
+    btn.textContent = opt.text;
+    btn.onclick = () => selectVocabOption(btn, opt.correct, i);
+    grid.appendChild(btn);
+  });
+}
+
+// --- Round 3: Spell ---
+function renderSpellRound() {
+  const v = vgState.vocab[vgState.qIndex];
+  const word = v.en.toLowerCase();
+  // mask: keep first and last letter visible, hide middle
+  const masked = word.split('').map((ch, i) => {
+    if (i === 0 || i === word.length - 1) return { ch, visible: true };
+    return { ch, visible: false };
+  });
+  vgState.spellBuffer = [];
+  vgState.spellMasked = masked;
+
+  // build letter options: all chars of the word + 2 random distractors
+  const letters = word.split('');
+  const extra = 'abcdefghijklmnopqrstuvwxyz'.split('').filter(c => !letters.includes(c));
+  for (let i = extra.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [extra[i], extra[j]] = [extra[j], extra[i]];
+  }
+  const letterOpts = [...letters, ...extra.slice(0, Math.min(3, extra.length))];
+  // shuffle
+  for (let i = letterOpts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [letterOpts[i], letterOpts[j]] = [letterOpts[j], letterOpts[i]];
+  }
+
+  const body = document.getElementById('vocabGameBody');
+  const ctrl = document.getElementById('vocabGameControls');
+  body.innerHTML = `
+    <div class="vocab-round-label">Round 3 · 拼写填空</div>
+    <button class="btn-primary" style="font-size:1.5rem;padding:1rem 2rem;border-radius:50%"
+      onclick="speakWord('${v.en.replace(/'/g,"\\'")}')">&#128264; 再听一次</button>
+    <div class="vocab-prompt" style="font-size:1rem;color:var(--text-secondary)">${v.zh}</div>
+    <div class="vocab-spell-word" id="spellDisplay">${renderSpellDisplay(masked, [])}</div>
+    <div class="vocab-letter-grid" id="spellLetters"></div>
+  `;
+  ctrl.innerHTML = `<button class="btn-secondary" onclick="spellClear()">清除</button>
+    <button class="btn-primary" onclick="spellSubmit()">确认</button>`;
+
+  const grid = document.getElementById('spellLetters');
+  letterOpts.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'vocab-letter-btn';
+    btn.textContent = ch;
+    btn.dataset.idx = i;
+    btn.onclick = () => spellPick(btn, ch, i);
+    grid.appendChild(btn);
+  });
+  setTimeout(() => speakWord(v.en.replace(/'/g,"\\'")), 300);
+}
+
+function renderSpellDisplay(masked, buffer) {
+  return masked.map((m, i) => {
+    if (m.visible) return `<span class="filled">${m.ch}</span>`;
+    const bufIdx = i - 1; // offset because first char is visible
+    if (buffer[bufIdx]) return `<span class="filled">${buffer[bufIdx]}</span>`;
+    return `<span class="blank">&nbsp;</span>`;
+  }).join('');
+}
+
+function spellPick(btn, ch, idx) {
+  // find next empty non-visible slot
+  const masked = vgState.spellMasked;
+  let target = -1;
+  for (let i = 0; i < masked.length; i++) {
+    if (!masked[i].visible && vgState.spellBuffer[i - 1] === undefined) {
+      target = i - 1;
+      break;
+    }
+  }
+  if (target === -1) return;
+  vgState.spellBuffer[target] = ch;
+  btn.classList.add('used');
+  document.getElementById('spellDisplay').innerHTML = renderSpellDisplay(masked, vgState.spellBuffer);
+}
+
+function spellClear() {
+  vgState.spellBuffer = [];
+  document.querySelectorAll('.vocab-letter-btn').forEach(b => b.classList.remove('used'));
+  document.getElementById('spellDisplay').innerHTML = renderSpellDisplay(vgState.spellMasked, []);
+}
+
+function spellSubmit() {
+  const v = vgState.vocab[vgState.qIndex];
+  const word = v.en.toLowerCase();
+  const filled = vgState.spellMasked.map((m, i) => {
+    if (m.visible) return m.ch;
+    return vgState.spellBuffer[i - 1] || '_';
+  }).join('');
+  const correct = filled === word;
+  vgState.totalCorrect += correct ? 1 : 0;
+  vgState.roundCorrect += correct ? 1 : 0;
+  vgState.roundTotal++;
+
+  const display = document.getElementById('spellDisplay');
+  display.innerHTML = renderSpellDisplay(vgState.spellMasked, vgState.spellBuffer);
+  display.querySelectorAll('.filled').forEach(el => {
+    el.style.color = correct ? '#10b981' : '#ef4444';
+  });
+
+  // show correct answer briefly
+  if (!correct) {
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'font-size:1rem;color:#ef4444;margin-top:.5rem;font-weight:600';
+    tmp.textContent = '正确答案: ' + word;
+    display.after(tmp);
+    setTimeout(() => tmp.remove(), 1500);
+  }
+
+  setTimeout(() => advanceVocabQuestion(), 1200);
+}
+
+function generateOptions(vocab, correctText, field) {
+  const correct = { text: correctText, correct: true };
+  const others = vocab.filter(v => v[field] !== correctText);
+  // shuffle and pick 3 (or fewer if vocab is small)
+  for (let i = others.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [others[i], others[j]] = [others[j], others[i]];
+  }
+  const distractors = others.slice(0, 3).map(v => ({ text: v[field], correct: false }));
+  const all = [correct, ...distractors];
+  // shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
+
+function selectVocabOption(btn, correct, idx) {
+  const opts = document.querySelectorAll('#vocabOptions .vocab-option');
+  opts.forEach(o => o.classList.add('disabled'));
+  if (correct) {
+    btn.classList.add('correct');
+    vgState.totalCorrect++;
+    vgState.roundCorrect++;
+  } else {
+    btn.classList.add('wrong');
+    // highlight correct
+    opts.forEach((o, i) => {
+      // find the correct one by checking all options
+    });
+  }
+  vgState.roundTotal++;
+  setTimeout(() => advanceVocabQuestion(), 800);
+}
+
+function advanceVocabQuestion() {
+  vgState.qIndex++;
+  const vocabLen = vgState.vocab.length;
+  if (vgState.qIndex >= vocabLen) {
+    // round complete
+    vgState.round++;
+    vgState.qIndex = 0;
+    if (vgState.round >= 3) {
+      finishVocabGame();
+      return;
+    }
+  }
+  renderVocabRound();
+}
+
+function finishVocabGame() {
+  const total = vgState.totalQuestions;
+  const correct = vgState.totalCorrect;
+  const pct = Math.round((correct / total) * 100);
+  const stars = pct >= 100 ? 3 : pct >= 80 ? 2 : pct >= 60 ? 1 : 0;
+  const xp = correct * 10 + (pct === 100 ? 20 : 0);
+
+  // save stars
+  const level = save.currentLevel;
+  const bookIdx = save.currentBook;
+  const book = BOOKS[level][bookIdx];
+  const starKey = book.id + ':vocab';
+  if (!save.levelStars[level]) save.levelStars[level] = {};
+  const prev = save.levelStars[level][starKey] || 0;
+  if (stars > prev) save.levelStars[level][starKey] = stars;
+  save.xp = (save.xp || 0) + xp;
+  addLog('vocab', `${book.titleEn} 词汇闯关: ${correct}/${total} (${pct}%)`);
+  persistSave();
+
+  const body = document.getElementById('vocabGameBody');
+  const ctrl = document.getElementById('vocabGameControls');
+  body.innerHTML = `
+    <div class="vocab-result">
+      <div style="font-size:1.2rem;font-weight:600">词汇闯关完成!</div>
+      <div class="big-score">${pct}%</div>
+      <div class="result-stars">${'&#11088;'.repeat(stars)}${'&#9734;'.repeat(3 - stars)}</div>
+      <div style="color:var(--text-secondary)">${correct} / ${total} 正确</div>
+      <div style="color:var(--accent-gold);font-weight:600">+${xp} XP</div>
+    </div>
+  `;
+  ctrl.innerHTML = `
+    <button class="btn-secondary" onclick="goToLevelDetail()">返回关卡</button>
+    <button class="btn-primary" onclick="startVocabGame()">再来一次</button>
+  `;
 }
 
 // ============================================================
